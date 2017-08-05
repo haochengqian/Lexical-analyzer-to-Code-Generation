@@ -3,10 +3,7 @@ package bit.minisys.minicc.scanner;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-
-import org.python.antlr.PythonParser.else_clause_return;
-import org.python.antlr.ast.boolopType;
-import org.python.objectweb.asm.util.CheckAnnotationAdapter;
+import java.util.HashMap;
 
 import bit.minisys.minicc.xmlout.*;
 
@@ -49,8 +46,8 @@ public class MiniCCScanner implements IMiniCCScanner{
 	private String[] Special = {"{","}","[","]","(",")","#",",",".",";",":"}; // 特殊字符
 	
 	private String[] Arithemic = {"+","-","-","^","~","&","|","&&","&=","|=","||","?","/","%",":","\\","'","\"",">>"
-			,"<<","!=","=","==","<=",">=","++","--"}; //算数运算符
-	
+			,"<<","!=","=","==","<=",">=","++","--","*","<",">"}; //算数运算符
+
 	private BufferedReader sourceFile;
 	
 	private static final int BUF_SIZE = 1024*1024; // 行内最大字符数
@@ -76,7 +73,7 @@ public class MiniCCScanner implements IMiniCCScanner{
 				}
 				else{
 					isEOF = true;
-					nextChar = 0;
+					nextChar = '@';
 				}
 			}
 			else{
@@ -179,8 +176,8 @@ public class MiniCCScanner implements IMiniCCScanner{
 		String currentToken = "";
 		int currentState = START;
 		boolean isSave = true;
-		while(currentState!=DONE&&!isEOF){
-			char c = getNextChar();
+		char c;
+		while( (c=getNextChar()) != -1 &&currentState!=DONE&&!isEOF){
 			isSave = true;
 			switch (currentState) {
 			case START:
@@ -195,7 +192,7 @@ public class MiniCCScanner implements IMiniCCScanner{
 				}else if(c == '!'){
 					currentState = NE;
 				}else if(c == '='){
-					currentState = NM;
+					currentState = EQ;
 				}else if(c == '-'){
 					currentState = FU;
 				}else if (c == '<') {
@@ -204,7 +201,6 @@ public class MiniCCScanner implements IMiniCCScanner{
 					currentState = NL;
 				}else if (c == '/') {
 					currentState = COMS;
-					isSave = false;
 				}else if(c == '&'){
 					currentState = AND;
 				}else if(c == '|'){
@@ -325,7 +321,7 @@ public class MiniCCScanner implements IMiniCCScanner{
 			case NM:
 				if(c == '<'){
 					currentState = SPECIAL2;
-				}else 	if(c!='='&&c!='<'){
+				}else if(c!='='&&c!='<'){
 					currentState = SPECIAL;
 					GetLastChar(2);
 					isSave = false;
@@ -374,22 +370,26 @@ public class MiniCCScanner implements IMiniCCScanner{
 				break;
 			case EQ:
 				if(c!='='){
-					currentState = SPECIAL;
-					GetLastChar(2);
+					currentState = DONE;
+					GetLastChar(1);
 					isSave = false;
 				}else{
 					currentState = DONE;
 				}
 				break;
 			case COMS:
-				isSave = false;
 				if(c == '/'){
+					isSave = false;
 					currentState = LINECOMS;
 				}else if (c == '*') {
+					isSave = false;
 					currentState = MULCOM1;
+				}else if (c == '='){
+					currentState = DONE;
 				}else{
-					currentState = SPECIAL;
+					isSave = false;
 					GetLastChar(1);
+					currentState = DONE;
 				}
 				break;
 			case LINECOMS:
@@ -424,6 +424,7 @@ public class MiniCCScanner implements IMiniCCScanner{
 					currentToken = "Error";
 					currentState = DONE;
 				}
+				break;
 			default:
 				currentState = DONE;
 				currentToken = "Error";
@@ -432,16 +433,17 @@ public class MiniCCScanner implements IMiniCCScanner{
 			if(isSave){
 				tokenStr += c;
 			}
-			if(currentState == DONE && !currentToken.equals("&#0;")){
+			if(currentState == DONE && tokenStr.equals("") == false){
 				currentToken = tokenStr;
 				fileout.value.add(currentToken);
 				fileout.line.add(lineNum);
+
 				if(isKeyWord(currentToken)){
 					fileout.type.add("keyword");
 				}else if(isSeparator(currentToken)){
 					fileout.type.add("separator");
 				}else if(isArithmetic(currentToken)){
-					fileout.type.add("operator");
+					fileout.type.add("operator");	
 				}else if(isNum(currentToken)){
 					fileout.type.add("const");
 				}else{
@@ -453,7 +455,6 @@ public class MiniCCScanner implements IMiniCCScanner{
 		}
 		return currentToken;
 	}
-
 	@Override
 	public void run(String iFile, String oFile) throws IOException, Exception {
 		// TODO Auto-generated method stub
@@ -467,6 +468,7 @@ public class MiniCCScanner implements IMiniCCScanner{
 		fileout.valid.add("true");
 		fileout.type.add("#");
 		fileout.printXml(iFile,oFile);
+		System.out.println("2. Scanner finished!");
 	}
 	
 }

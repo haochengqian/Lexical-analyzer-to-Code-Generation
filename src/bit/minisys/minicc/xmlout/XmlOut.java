@@ -43,8 +43,10 @@ public class XmlOut {
 		project.setAttribute("name", inFile);
 		document.appendChild(project);
 		Element tokens = document.createElement("tokens");
+		Element token;
 		for(int i=0;i<tokensNumber;i++){
-			Element token = document.createElement("token");
+			
+			token = document.createElement("token");
 			Element numbere = document.createElement("number");
 			numbere.setTextContent(String.valueOf(1));
 			token.appendChild(numbere);

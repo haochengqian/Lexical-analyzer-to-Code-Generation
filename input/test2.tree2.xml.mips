@@ -1,0 +1,49 @@
+		.data
+
+		.text
+__foo:
+	 LI $s0,3
+	 MOVE $t2,$s0
+	 LI $s1,4
+	 SUB $t0,$t0,$s1
+	 BLTZ $t0,CODE1
+	 J CODE2
+CODE1:
+	 LI $s2,2
+	 ADD $t1,$t1,$s2
+	 MOVE $t1,$t1
+CODE2:
+	 LI $s3,3
+	 SUB $t1,$t1,$s3
+	 BEQZ $t1,CODE3
+	 J CODE4
+CODE3:
+	 LI $s4,6
+	 MUL $t0,$t0,$s4
+	 MOVE $t0,$t0
+CODE4:
+	 JR $ra 
+
+__main:
+	 LI $s5,1
+	 MOVE $t5,$s5
+	 LI $s6,1
+	 SUB $t3,$t3,$s6
+	 BGEZ $t3,CODE5
+	 J CODE6
+CODE5:
+	 LI $s7,1
+	 ADD $t5,$t5,$s7
+	 MOVE $t4,$t5
+CODE6:
+	 LI $t8,3
+	 SUB $t4,$t4,$t8
+	 BLEZ $t4,CODE7
+	 J CODE8
+CODE7:
+	 LI $t9,2
+	 MUL $t3,$t3,$t9
+	 MOVE $t3,$t3
+CODE8:
+	 JR $ra 
+
